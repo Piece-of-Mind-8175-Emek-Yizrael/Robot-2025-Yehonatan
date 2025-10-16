@@ -22,14 +22,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.POM_lib.Joysticks.PomXboxController;
-import frc.robot.commands.DriveCommands;
-import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon;
-import frc.robot.subsystems.drive.GyroIOSim;
-import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.drive.ModuleIOPOM;
-import frc.robot.subsystems.drive.ModuleIOSim;
 
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -47,7 +39,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
         // Subsystems
-        private final Drive drive;
 
         // Controller
         private final PomXboxController driverController = new PomXboxController(0);
@@ -64,42 +55,14 @@ public class RobotContainer {
                 switch (Constants.currentMode) {
                         case REAL:
                                 // Real robot, instantiate hardware IO implementations
-                                drive = new Drive(
-                                                new GyroIOPigeon(),
-                                                new ModuleIOPOM(0),
-                                                new ModuleIOPOM(1),
-                                                new ModuleIOPOM(2),
-                                                new ModuleIOPOM(3));
                                 break;
 
                         case SIM:
                                 // Sim robot, instantiate physics sim IO implementations
-
-                                driveSimulation = new SwerveDriveSimulation(Drive.maplesimConfig,
-                                                new Pose2d(3, 3, new Rotation2d()));
-                                SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
-
-                                drive = new Drive(
-                                                new GyroIOSim(this.driveSimulation.getGyroSimulation()),
-                                                new ModuleIOSim(this.driveSimulation.getModules()[0]),
-                                                new ModuleIOSim(this.driveSimulation.getModules()[1]),
-                                                new ModuleIOSim(this.driveSimulation.getModules()[2]),
-                                                new ModuleIOSim(this.driveSimulation.getModules()[3]));
                                 break;
 
                         default:
                                 // Replayed robot, disable IO implementations
-                                drive = new Drive(
-                                                new GyroIO() {
-                                                },
-                                                new ModuleIO() {
-                                                },
-                                                new ModuleIO() {
-                                                },
-                                                new ModuleIO() {
-                                                },
-                                                new ModuleIO() {
-                                                });
                                 break;
                 }
 
@@ -109,33 +72,6 @@ public class RobotContainer {
                 autoChooser = new LoggedDashboardChooser<>("Auto Choices", c); // TODO use auto builder
 
                 // Set up SysId routines
-                autoChooser.addOption(
-                                "Drive Wheel Radius Characterization",
-                                DriveCommands.wheelRadiusCharacterization(drive));
-                autoChooser.addOption(
-                                "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-                autoChooser.addOption(
-                                "Drive SysId (Quasistatic Forward)",
-                                drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-                autoChooser.addOption(
-                                "Drive SysId (Quasistatic Reverse)",
-                                drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-                autoChooser.addOption(
-                                "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-                autoChooser.addOption(
-                                "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-                autoChooser.addOption(
-                                "Drive SysId (Quasistatic Steer Forward)",
-                                drive.sysIdSteerQuasistatic(SysIdRoutine.Direction.kForward));
-                autoChooser.addOption(
-                                "Drive SysId (Quasistatic Steer Reverse)",
-                                drive.sysIdSteerQuasistatic(SysIdRoutine.Direction.kReverse));
-                autoChooser.addOption(
-                                "Drive SysId (Dynamic Steer Forward)",
-                                drive.sysIdSteerDynamic(SysIdRoutine.Direction.kForward));
-                autoChooser.addOption(
-                                "Drive SysId (Dynamic Steer Reverse)",
-                                drive.sysIdSteerDynamic(SysIdRoutine.Direction.kReverse));
 
                 // Configure the button bindings
                 configureButtonBindings();
@@ -151,12 +87,7 @@ public class RobotContainer {
          */
         private void configureButtonBindings() {
                 // Default command, normal field-relative drive
-                drive.setDefaultCommand(
-                                DriveCommands.joystickDrive(
-                                                drive,
-                                                () -> driverController.getLeftY() * 0.27,
-                                                () -> driverController.getLeftX() * 0.27,
-                                                () -> driverController.getRightX() * 0.23));
+
                 // driverController.x().onTrue(Commands.runOnce(() ->
                 // moduleFL.setTurnPosition(new Rotation2d(Math.PI))));
                 // driverController.b().onTrue(
@@ -176,21 +107,6 @@ public class RobotContainer {
 
                 // ])));
 
-                // Lock to 0° when A button is held
-                driverController
-                                .a()
-                                .whileTrue(
-                                                DriveCommands.joystickDriveAtAngle(
-                                                                drive,
-                                                                () -> -driverController.getLeftY(),
-                                                                () -> -driverController.getLeftX(),
-                                                                () -> new Rotation2d()));
-
-                // Switch to X pattern when X button is pressed
-                driverController.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-                // Reset gyro to 0° when Y button is pressed
-                driverController.y().onTrue(drive.resetGyroCommand());
         }
 
         public void displaSimFieldToAdvantageScope() {

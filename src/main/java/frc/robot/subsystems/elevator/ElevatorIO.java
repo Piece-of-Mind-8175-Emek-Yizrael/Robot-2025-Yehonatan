@@ -44,6 +44,15 @@ public interface ElevatorIO {
     public default void setGoal(double position) {
     }
 
+    public default void resetPID() {
+    }
+
+    public default void resetPID(double goal) {
+    }
+    
+    public default void resistGravity() {
+    }
+
     public default void resetIfPressed() {
     }
 

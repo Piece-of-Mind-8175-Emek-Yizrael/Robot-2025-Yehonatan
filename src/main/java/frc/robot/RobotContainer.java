@@ -13,20 +13,19 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.POM_lib.Joysticks.PomXboxController;
-
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.POM_lib.Joysticks.PomXboxController;
+import frc.robot.commands.ElevatorCommands;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorIOReal;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -48,6 +47,8 @@ public class RobotContainer {
 
         private SwerveDriveSimulation driveSimulation = null;
 
+        private Elevator elevator;
+
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
@@ -55,6 +56,7 @@ public class RobotContainer {
                 switch (Constants.currentMode) {
                         case REAL:
                                 // Real robot, instantiate hardware IO implementations
+                                elevator = new Elevator(new ElevatorIOReal());
                                 break;
 
                         case SIM:
@@ -75,6 +77,7 @@ public class RobotContainer {
 
                 // Configure the button bindings
                 configureButtonBindings();
+                //finally found me
         }
 
         /**
@@ -86,6 +89,10 @@ public class RobotContainer {
          * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
          */
         private void configureButtonBindings() {
+                driverController.y().onTrue(ElevatorCommands.goToPosition(elevator, 30));
+                driverController.b().onTrue(ElevatorCommands.goToPosition(elevator, 20));
+                driverController.x().onTrue(ElevatorCommands.goToPosition(elevator, 10));
+                driverController.a().onTrue(ElevatorCommands.goToPosition(elevator, 0));
                 // Default command, normal field-relative drive
 
                 // driverController.x().onTrue(Commands.runOnce(() ->

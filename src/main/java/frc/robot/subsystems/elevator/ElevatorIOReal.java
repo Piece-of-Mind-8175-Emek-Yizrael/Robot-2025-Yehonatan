@@ -43,7 +43,7 @@ public class ElevatorIOReal implements ElevatorIO {
 
         SparkMaxConfig config = new SparkMaxConfig();
         config.idleMode(IdleMode.kBrake).smartCurrentLimit(CURRENT_LIMIT).voltageCompensation(VOLTAGE_COMPENSATION);
-        config.encoder.positionConversionFactor(POSITION_CONVERSION_FACTOR)
+        config.encoder.positionConversionFactor(POSITION_CONVERSION_FACTOR).inverted(true)
                 .velocityConversionFactor(POSITION_CONVERSION_FACTOR / 60.0);
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

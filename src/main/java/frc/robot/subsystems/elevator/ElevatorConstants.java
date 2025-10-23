@@ -5,6 +5,9 @@ public class ElevatorConstants {
     public static final int MOTOR_ID = 16;
     public static final int BRAKE_SWITCH_ID = 4;
     public static final int FOLD_SWITCH_ID = 3;
+    public static final int CURRENT_LIMIT = 40;
+    public static final int VOLTAGE_COMPENSATION = 12;
+    public static final int POSITION_CONVERSION_FACTOR = 1;
 
     // PID Constants
     public static final double kP = 0.0;

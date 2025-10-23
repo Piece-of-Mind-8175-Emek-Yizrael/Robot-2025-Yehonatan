@@ -3,11 +3,11 @@ package frc.robot.subsystems.elevator;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.TrapezoidProfileCommand;
 
-public class Elevator extends SubsystemBase{
+public class Elevator extends SubsystemBase {
 
     private final ElevatorIO io;
     private final ElevatorIOInputsAutoLogged inputs;
@@ -16,7 +16,14 @@ public class Elevator extends SubsystemBase{
         this.io = io;
         this.inputs = new ElevatorIOInputsAutoLogged();
 
-        setDefaultCommand(new RepeatCommand(new ConditionalCommand(this.runOnce(()-> io.setVoltage(0)), this.runOnce(()-> io.resistGravity()),()->io.getFoldSwitch())));
+        // setDefaultCommand(new RepeatCommand(new ConditionalCommand(this.runOnce(() ->
+        // io.setVoltage(0)),
+        // this.runOnce(() -> io.resistGravity()), () -> io.getFoldSwitch())));
+
+        setDefaultCommand(new RepeatCommand(new ConditionalCommand(this.runOnce(() -> io.setVoltage(0)),
+                this.runOnce(io::resistGravity), io::getFoldSwitch))
+                .beforeStarting(new PrintCommand("Elevator default command")));
+
     }
 
     @Override

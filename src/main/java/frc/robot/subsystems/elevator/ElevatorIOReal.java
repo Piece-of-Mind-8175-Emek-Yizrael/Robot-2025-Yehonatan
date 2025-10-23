@@ -1,11 +1,14 @@
 package frc.robot.subsystems.elevator;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.BRAKE_SWITCH_ID;
+import static frc.robot.subsystems.elevator.ElevatorConstants.CURRENT_LIMIT;
 import static frc.robot.subsystems.elevator.ElevatorConstants.FOLD_SWITCH_ID;
 import static frc.robot.subsystems.elevator.ElevatorConstants.MAX_ACCELERATION;
 import static frc.robot.subsystems.elevator.ElevatorConstants.MAX_VELOCITY;
 import static frc.robot.subsystems.elevator.ElevatorConstants.MOTOR_ID;
+import static frc.robot.subsystems.elevator.ElevatorConstants.POSITION_CONVERSION_FACTOR;
 import static frc.robot.subsystems.elevator.ElevatorConstants.TOLERANCE;
+import static frc.robot.subsystems.elevator.ElevatorConstants.VOLTAGE_COMPENSATION;
 import static frc.robot.subsystems.elevator.ElevatorConstants.kD;
 import static frc.robot.subsystems.elevator.ElevatorConstants.kG;
 import static frc.robot.subsystems.elevator.ElevatorConstants.kI;
@@ -14,6 +17,10 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.kS;
 import static frc.robot.subsystems.elevator.ElevatorConstants.kV;
 
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -33,9 +40,17 @@ public class ElevatorIOReal implements ElevatorIO {
     public ElevatorIOReal() {
         motor = new POMSparkMax(MOTOR_ID);
         encoder = motor.getEncoder();
+
+        SparkMaxConfig config = new SparkMaxConfig();
+        config.idleMode(IdleMode.kBrake).smartCurrentLimit(CURRENT_LIMIT).voltageCompensation(VOLTAGE_COMPENSATION);
+        config.encoder.positionConversionFactor(POSITION_CONVERSION_FACTOR)
+                .velocityConversionFactor(POSITION_CONVERSION_FACTOR / 60.0);
+
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         brakeSwitch = new POMDigitalInput(BRAKE_SWITCH_ID);
         foldSwitch = new POMDigitalInput(FOLD_SWITCH_ID);
-        pidController = new ProfiledPIDController(kP, kI, kD, new TrapezoidProfile.Constraints(MAX_VELOCITY, MAX_ACCELERATION));
+        pidController = new ProfiledPIDController(kP, kI, kD,
+                new TrapezoidProfile.Constraints(MAX_VELOCITY, MAX_ACCELERATION));
         feedforward = new ElevatorFeedforward(kS, kG, kV);
         pidController.setTolerance(TOLERANCE);
     }
@@ -48,6 +63,8 @@ public class ElevatorIOReal implements ElevatorIO {
         inputs.elevatorAppliedVolts = motor.getAppliedOutput() * motor.getBusVoltage();
         inputs.brakeSwitch = brakeSwitch.get();
         inputs.foldSwitch = foldSwitch.get();
+
+        resetIfPressed();
     }
 
     @Override
@@ -113,17 +130,20 @@ public class ElevatorIOReal implements ElevatorIO {
 
     @Override
     public void resetIfPressed() {
+        SparkMaxConfig config = new SparkMaxConfig();
+
         if (getFoldSwitch()) {
             resetEncoder();
         }
 
         if (getBrakeSwitch()) {
-            motor.setBrake(false);
+            config.idleMode(IdleMode.kCoast);
         } else {
-            motor.setBrake(true);
+            config.idleMode(IdleMode.kBrake);
         }
+
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
     }
-
-
 
 }
